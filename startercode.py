@@ -26,6 +26,9 @@ from dogapi_sample_cache import (
 
 
 def load_json(filename):
+    
+
+
     """
     Opens the given file and loads its contents as a Python dictionary using json.load.
 
@@ -35,7 +38,17 @@ def load_json(filename):
     RETURNS:
         A dictionary with the JSON data, OR an empty dictionary {} if the file
         cannot be opened or is not valid JSON.
+
     """
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                return data
+            except:
+                return {}
+    except:
+        return {}
     pass
 
 
