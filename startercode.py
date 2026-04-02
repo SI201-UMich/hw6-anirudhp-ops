@@ -49,7 +49,7 @@ def load_json(filename):
                 return {}
     except:
         return {}
-    pass
+    
 
 
 def create_cache(dictionary, filename):
@@ -64,7 +64,8 @@ def create_cache(dictionary, filename):
     RETURNS:
         None
     """
-    pass
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(dictionary, f, indent=4)
 
 
 def search_breed(breed_id):
@@ -81,7 +82,16 @@ def search_breed(breed_id):
         JSON body as a dict (with a top-level 'data' key on success), OR None if the
         request failed or the response does not represent a successful breed lookup.
     """
-    pass
+    link = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+    try:
+        response = requests.get(link)
+        if response.status_code == 200:
+            resp = response.json()
+            if resp.get('data') is not None:
+                return (resp, link)
+        return None
+    except: ###Exception
+        return None
 
 
 def update_cache(breed_ids, cache_file):
