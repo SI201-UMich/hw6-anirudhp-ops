@@ -1,13 +1,14 @@
 # SI 201 HW6 (APIs, JSON, and Caching)
-# Your name:
-# Your student id:
-# Your email:
+# Your name: Anirudh Parasrampuria
+# Your student id: 2756 8987
+# Your email: anirudhp@umich.edu
 # Who or what you worked with on this homework (including generative AI like ChatGPT):
 # If you worked with generative AI also add a statement for how you used it.
 # e.g.:
-# Asked ChatGPT for help debugging and understanding the JSON structure
+# Asked Claude for help in writing code when I did not know the syntax. I gave it pseudocode
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
+# I think that it did, i used to help me understand things which is what my goal was. 
 #
 # --- ARGUMENTS & EXPECTED RETURN VALUES PROVIDED --- #
 # --- SEE INSTRUCTIONS FOR FULL DETAILS ON METHOD IMPLEMENTATION --- #
@@ -108,7 +109,22 @@ def update_cache(breed_ids, cache_file):
         A string: "Cached data for {percentage}% of breeds",
         where percentage = (successful_new_adds / len(breed_ids)) * 100.
     """
-    pass
+    fade = load_json(cache_file)
+    counter = 0
+ 
+    for breed_id in breed_ids:
+        url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+        if url in fade:
+            continue
+        result = search_breed(breed_id)
+        if result is not None:
+            parsed, req_url = result
+            fade[req_url] = parsed
+            counter += 1
+ 
+    create_cache(fade, cache_file)
+    percentage = (counter / len(breed_ids)) * 100
+    return f"Cached data for {percentage}% of breeds"
 
 
 def get_longest_lifespan_breed(cache_file):
@@ -124,7 +140,34 @@ def get_longest_lifespan_breed(cache_file):
         string "No breeds found" if no breed in the cache has a life.max value.
     """
     pass
-
+    cache = load_json(cache_file)
+    best_name = None
+    best_lifespan = None
+ 
+    for entry in cache.values():
+        try:
+            attributes = entry['data']['attributes']
+            name = attributes['name']
+            max_life = attributes['life']['max']
+            
+            if not isinstance(max_life, (int, float)):
+                continue
+            if best_lifespan is None:
+                best_lifespan = max_life
+                best_name = name
+            elif max_life > best_lifespan:
+                best_lifespan = max_life
+                best_name = name
+            elif max_life == best_lifespan:
+                
+                if name < best_name:
+                    best_name = name
+        except (KeyError, TypeError):
+            continue
+ 
+    if best_name is None:
+        return "No breeds found"
+    return (best_name, best_lifespan)
 
 def get_groups_above_cutoff(cutoff, cache_file):
     """
@@ -142,7 +185,19 @@ def get_groups_above_cutoff(cutoff, cache_file):
     RETURNS:
         A dictionary {group_uuid: count} for groups with count >= cutoff only.
     """
-    pass
+    cache = load_json(cache_file)
+    group_counts = {}
+ 
+    for entry in cache.values():
+        try:
+            group_id = entry['data']['relationships']['group']['data']['id']
+            if not group_id:
+                continue
+            group_counts[group_id] = group_counts.get(group_id, 0) + 1
+        except (KeyError, TypeError):
+            continue
+ 
+    return {gid: count for gid, count in group_counts.items() if count >= cutoff}
 
 
 # Extra Credit
@@ -166,6 +221,8 @@ def recommend_breeds_in_same_group(breed_name, cache_file):
             "No group information available for '{breed_name}'."  (no group id)
             "No recommendations found based on '{breed_name}'."  (no other breeds in that group)
     """
+
+    
 
 
 class TestHomeworkDogAPI(unittest.TestCase):
